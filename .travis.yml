@@ -1,0 +1,4 @@
+language: cpp
+script: ./scripts/travis-build.sh
+os:
+  - linux
