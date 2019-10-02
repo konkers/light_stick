@@ -4,18 +4,11 @@
 // Licensed under the MIT Licensed.  See toplevel LICENCE for details.
 
 #include "ws2812b.hpp"
+#include "pixbuf.hpp"
 
 #define LEDS_PER_SIDE 27
-#define NUM_LEDS (LEDS_PER_SIDE * 4 + 1)
 
-a3led::Ws2812b<NUM_LEDS> leds(SPI);
-
-struct color
-{
-  uint8_t r;
-  uint8_t g;
-  uint8_t b;
-};
+Pixbuf<a3led::Ws2812b, LEDS_PER_SIDE> leds(SPI);
 
 static inline uint32_t hsv_inc(uint32_t index, int16_t inc)
 {
@@ -71,14 +64,16 @@ void loop()
   for (size_t i = 0; i < LEDS_PER_SIDE; i++)
   {
     auto color = hsv_pixel(cur_index);
-    leds.set(i, color.r, color.g, color.b);
-    leds.set((LEDS_PER_SIDE - i - 1) + LEDS_PER_SIDE, color.r, color.g, color.b);
-    leds.set(i + 2 * LEDS_PER_SIDE, color.r, color.g, color.b);
-    leds.set((LEDS_PER_SIDE - i - 1) + 3 * LEDS_PER_SIDE + 1, color.r, color.g, color.b);
+    leds.set(0, i, color);
+    leds.set(1, i, color);
+    leds.set(2, i, color);
+    leds.set(3, i, color);
     cur_index = hsv_inc(cur_index, INC_PATTERN);
   }
+#if 0
   auto color = hsv_pixel(cur_index);
   leds.set(3 * LEDS_PER_SIDE, color.r, color.g, color.b);
+#endif
   hsv_index = hsv_inc(hsv_index, INC_FRAME);
 
   leds.send();

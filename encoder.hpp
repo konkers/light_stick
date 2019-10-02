@@ -22,9 +22,9 @@ public:
         {
             return;
         }
-        set_channel(led * 9 + 1, g >> 2);
-        set_channel(led * 9 + 4, r >> 2);
-        set_channel(led * 9 + 7, b >> 2);
+        set_channel(led * 9 + 1, g);
+        set_channel(led * 9 + 4, r);
+        set_channel(led * 9 + 7, b);
     }
 
     bool print_channel(size_t led, size_t channel, char line1[25], char line2[25])
