@@ -5,7 +5,7 @@
 
 #include "ws2812b.hpp"
 
-#define LEDS_PER_SIDE 27
+#define LEDS_PER_SIDE 6
 #define NUM_LEDS (LEDS_PER_SIDE * 4 + 1)
 
 a3led::Ws2812b<NUM_LEDS> leds(SPI);
@@ -70,8 +70,8 @@ void setup()
 }
 
 uint32_t hsv_index;
-#define INC_PATTERN 40
-#define INC_FRAME -3
+#define INC_PATTERN 100
+#define INC_FRAME -2
 void loop()
 {
   uint32_t cur_index = hsv_index;
@@ -85,8 +85,10 @@ void loop()
       leds.set((LEDS_PER_SIDE - i - 1) + 3 * LEDS_PER_SIDE + 1, color.r, color.g, color.b);
       cur_index = hsv_inc(cur_index, INC_PATTERN);
     }
+#if 0
   auto color = hsv_pixel(cur_index);
   leds.set(3 * LEDS_PER_SIDE, color.r, color.g, color.b);
+#endif
   hsv_index = hsv_inc(hsv_index, INC_FRAME);
 
   leds.send();
