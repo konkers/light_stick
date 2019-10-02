@@ -16,6 +16,8 @@ struct color
   uint8_t g;
   uint8_t b;
 };
+#define BUTTON 4
+bool active = true;
 
 static inline uint32_t hsv_inc(uint32_t index, int16_t inc)
 {
@@ -58,8 +60,13 @@ static inline color hsv_pixel(uint32_t index)
 
 void setup()
 {
+  pinMode(BUTTON, INPUT_PULLUP);
   Serial.begin(115200);
   leds.init();
+  if (digitalRead(BUTTON) == 0)
+  {
+    active = false;
+  }
 }
 
 uint32_t hsv_index;
@@ -69,14 +76,15 @@ void loop()
 {
   uint32_t cur_index = hsv_index;
   for (size_t i = 0; i < LEDS_PER_SIDE; i++)
-  {
-    auto color = hsv_pixel(cur_index);
-    leds.set(i, color.r, color.g, color.b);
-    leds.set((LEDS_PER_SIDE - i - 1) + LEDS_PER_SIDE, color.r, color.g, color.b);
-    leds.set(i + 2 * LEDS_PER_SIDE, color.r, color.g, color.b);
-    leds.set((LEDS_PER_SIDE - i - 1) + 3 * LEDS_PER_SIDE + 1, color.r, color.g, color.b);
-    cur_index = hsv_inc(cur_index, INC_PATTERN);
-  }
+    if (active)
+    {
+      auto color = hsv_pixel(cur_index);
+      leds.set(i, color.r, color.g, color.b);
+      leds.set((LEDS_PER_SIDE - i - 1) + LEDS_PER_SIDE, color.r, color.g, color.b);
+      leds.set(i + 2 * LEDS_PER_SIDE, color.r, color.g, color.b);
+      leds.set((LEDS_PER_SIDE - i - 1) + 3 * LEDS_PER_SIDE + 1, color.r, color.g, color.b);
+      cur_index = hsv_inc(cur_index, INC_PATTERN);
+    }
   auto color = hsv_pixel(cur_index);
   leds.set(3 * LEDS_PER_SIDE, color.r, color.g, color.b);
   hsv_index = hsv_inc(hsv_index, INC_FRAME);
