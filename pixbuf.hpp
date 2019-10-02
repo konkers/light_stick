@@ -13,6 +13,13 @@ struct color
     uint8_t b;
 };
 
+class Display
+{
+public:
+    virtual void set(unsigned int x, unsigned int y, const color &c) = 0;
+    virtual const color &get(unsigned int x, unsigned int y) = 0;
+};
+
 static const size_t side_table[4]{
     0, 2, 3, 1};
 
@@ -21,7 +28,7 @@ static const size_t dir_table[4]{
     0, 1, 1, 0};
 
 template <template <unsigned int> typename LED, unsigned int LEDS_PER_SIDE, unsigned int SIDES = 4, unsigned int LOG_GAIN = 2>
-class Pixbuf
+class Pixbuf : public Display
 {
 public:
     static constexpr unsigned int NUM_LEDS = LEDS_PER_SIDE * SIDES;
@@ -55,13 +62,13 @@ public:
         leds_.send();
     }
 
-    void set(unsigned int x, unsigned int y, const color &c)
+    virtual void set(unsigned int x, unsigned int y, const color &c) override
     {
         // TODO: assert x, y limits... or runtime check... or something.
         buf_[x][y] = c;
     }
 
-    const color &get(unsigned int x, unsigned int y)
+    virtual const color &get(unsigned int x, unsigned int y) override
     {
         // TODO: see set()
         return buf_[x][y];

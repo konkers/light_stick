@@ -3,89 +3,81 @@
 //
 // Licensed under the MIT Licensed.  See toplevel LICENCE for details.
 
-#include "ws2812b.hpp"
+#include "hsv.hpp"
+#include "mode_linear_rainbow.hpp"
+#include "mode_radial_rainbow.hpp"
+#include "mode_rain.hpp"
 #include "pixbuf.hpp"
+#include "ws2812b.hpp"
 
 #define LEDS_PER_SIDE 6
 
 Pixbuf<a3led::Ws2812b, LEDS_PER_SIDE> leds(SPI);
 
+ModeLinearRainbow linear_rainbow(LEDS_PER_SIDE, 100, -2);
+ModeRadialRainbow radial_rainbow(LEDS_PER_SIDE, -2);
+ModeRain rain(LEDS_PER_SIDE);
+
 #define BUTTON 4
+int button_down;
 bool active = true;
 
-static inline uint32_t hsv_inc(uint32_t index, int16_t inc)
-{
-  int32_t signed_index = index + inc;
-  while (signed_index >= 0x600)
-    signed_index -= 0x600;
-  while (signed_index < 0)
-    signed_index += 0x600;
-  return signed_index;
-}
-
-static inline color hsv_pixel(uint32_t index)
-{
-  uint8_t pos = index & 0xff;
-  uint8_t neg = 0xff - (index & 0xff);
-  uint8_t phase = (index >> 8) & 0x7;
-
-  switch (phase)
-  {
-  case 0:
-    return color{pos, 0x00, 0xff};
-
-  case 1:
-    return color{0xff, 0x00, neg};
-
-  case 2:
-    return color{0xff, pos, 0x00};
-
-  case 3:
-    return color{neg, 0xff, 0x00};
-
-  case 4:
-    return color{0x00, 0xff, pos};
-
-  case 5:
-  default:
-    return color{0x00, neg, 0xff};
-  }
-}
+uint32_t mode;
+Mode *modes[] = {
+    &linear_rainbow,
+    &radial_rainbow,
+    &rain,
+};
+static constexpr size_t n_modes = sizeof(modes) / sizeof(*modes);
 
 void setup()
 {
+  randomSeed(analogRead(A0));
   pinMode(BUTTON, INPUT_PULLUP);
   Serial.begin(115200);
+  Serial.printf("hello");
   leds.init();
   if (digitalRead(BUTTON) == 0)
   {
     active = false;
   }
+  linear_rainbow.init();
+  radial_rainbow.init();
+  rain.init();
 }
 
+#if 0
 uint32_t hsv_index;
 #define INC_PATTERN 100
 #define INC_FRAME -2
+#endif
 void loop()
 {
+  if (digitalRead(BUTTON) == 0)
+  {
+    button_down++;
+  }
+  else
+  {
+    button_down = 0;
+  }
+
+  if (button_down == 3)
+  {
+    active = true;
+    mode++;
+    if (mode >= n_modes)
+    {
+      mode = 0;
+    }
+
+    modes[mode]->init();
+  }
+
   if (active)
   {
-    auto cur_index = hsv_index;
-    for (size_t i = 0; i < LEDS_PER_SIDE; i++)
-    {
-      auto color = hsv_pixel(cur_index);
-      leds.set(0, i, color);
-      leds.set(1, i, color);
-      leds.set(2, i, color);
-      leds.set(3, i, color);
-      cur_index = hsv_inc(cur_index, INC_PATTERN);
-    }
+    modes[mode]->step(leds);
   }
-#if 0
-  auto color = hsv_pixel(cur_index);
-  leds.set(3 * LEDS_PER_SIDE, color.r, color.g, color.b);
-#endif
-  hsv_index = hsv_inc(hsv_index, INC_FRAME);
 
   leds.send();
   delay(10);
