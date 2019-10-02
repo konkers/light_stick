@@ -11,7 +11,7 @@
 
 namespace a3led
 {
-template <int NUM_LEDS>
+template <unsigned int NUM_LEDS>
 class Ws2812b
 {
 public:
